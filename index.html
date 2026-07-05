@@ -1,15 +1,73 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Compute Metrics Hub</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ComputeMetrics Hub - Home</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.css">
 </head>
 <body>
-  <!-- Target element for FormWizard class -->
-  <button id="nextBtn">Next Step</button>
+  <header class="site-header">
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+      <div class="container">
+        <a class="navbar-brand fw-bold" href="index.html">ComputeMetrics Hub</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navMenu">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+            <li class="nav-item"><a class="nav-link" href="benchmarks.html">Benchmarks</a></li>
+            <li class="nav-item"><a class="nav-link" href="configurator.html">Configurator</a></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+  </header>
 
-  <!-- type="module" is strictly required to enable ES6 import/export syntax -->
-  <script type="module" src="./assets/js/main.js"></script>
+  <main class="container py-5">
+    <section class="hero text-center py-5 mb-4">
+      <div class="hero-inner mx-auto" style="max-width: 780px;">
+        <p class="small-muted text-uppercase mb-2">AI Model Benchmarking Dashboard</p>
+        <h1 class="display-6 fw-semibold mb-3">Compare models, inspect context windows, and run fast simulations.</h1>
+        <p class="lead text-muted mb-4">
+          Use the benchmark explorer to compare vendors and model families, then open the configurator to build a quick side-by-side run.
+        </p>
+        <div class="d-flex flex-column flex-sm-row justify-content-center gap-2">
+          <a class="btn btn-primary btn-lg" href="benchmarks.html">View Benchmarks</a>
+          <a class="btn btn-outline-secondary btn-lg" href="configurator.html">Open Configurator</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="row g-3">
+      <div class="col-md-4">
+        <div class="selector-card h-100">
+          <h2 class="h6 mb-2">Browse the catalog</h2>
+          <p class="small-muted mb-0">Open the model list and scan the current dataset without jumping between pages.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="selector-card h-100">
+          <h2 class="h6 mb-2">Build a run</h2>
+          <p class="small-muted mb-0">Use the multi-step wizard to narrow the list, choose two models, and submit a comparison.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="selector-card h-100">
+          <h2 class="h6 mb-2">Saved preferences</h2>
+          <p class="small-muted mb-0">Theme and the last submitted run are stored locally so the interface feels persistent.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="text-center py-3">
+    <small>ComputeMetrics Hub - Benchmark Viewer</small>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

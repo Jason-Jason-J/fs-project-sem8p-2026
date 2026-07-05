@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ComputeMetrics Hub - Metrics Tests</title>
+  <link rel="stylesheet" href="../assets/css/styles.css">
+  <style>
+    body {
+      padding: 2rem 1rem 3rem;
+    }
+
+    .test-shell {
+      max-width: 760px;
+      margin: 0 auto;
+    }
+
+    .test-list {
+      list-style: none;
+      padding: 0;
+      margin: 1rem 0 0;
+    }
+
+    .test-item {
+      padding: .9rem 1rem;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      border-radius: 12px;
+      background: var(--panel);
+      margin-bottom: .75rem;
+    }
+
+    .test-pass {
+      border-left: 4px solid #22c55e;
+    }
+
+    .test-fail {
+      border-left: 4px solid #ef4444;
+    }
+
+    .test-meta {
+      color: var(--muted);
+      font-size: .92rem;
+      margin-top: .25rem;
+    }
+  </style>
+</head>
+<body>
+  <main class="test-shell">
+    <section class="selector-card">
+      <p class="small-muted text-uppercase mb-2">Browser harness</p>
+      <h1 class="h3 mb-2">Metrics Tests</h1>
+      <p class="small-muted mb-3">Run a small browser-friendly test pass against the local dataset and shared helpers.</p>
+      <button id="runTests" type="button" class="btn btn-cta">Run Tests</button>
+      <div id="summary" class="mt-3 small-muted">Ready to run.</div>
+    </section>
+
+    <section class="mt-4">
+      <ul id="results" class="test-list" aria-live="polite"></ul>
+    </section>
+  </main>
+
+  <script type="module">
+    import { runMetricsTests } from './metrics.test.js';
+
+    const runButton = document.getElementById('runTests');
+    const summary = document.getElementById('summary');
+    const results = document.getElementById('results');
+
+    function render(resultsList) {
+      results.innerHTML = '';
+
+      const failed = resultsList.filter(item => !item.ok).length;
+      const passed = resultsList.length - failed;
+      summary.textContent = `${passed} passed, ${failed} failed.`;
+
+      for (const item of resultsList) {
+        const li = document.createElement('li');
+        li.className = `test-item ${item.ok ? 'test-pass' : 'test-fail'}`;
+        li.innerHTML = `
+          <strong>${item.ok ? 'PASS' : 'FAIL'}</strong> ${item.name}
+          ${item.error ? `<div class="test-meta">${item.error.message}</div>` : ''}
+        `;
+        results.appendChild(li);
+      }
+    }
+
+    async function run() {
+      summary.textContent = 'Running tests...';
+      runButton.disabled = true;
+
+      try {
+        const resultsList = await runMetricsTests();
+        render(resultsList);
+      } catch (error) {
+        summary.textContent = 'Test run failed.';
+        const li = document.createElement('li');
+        li.className = 'test-item test-fail';
+        li.innerHTML = `<strong>FAIL</strong> Harness error<div class="test-meta">${error.message}</div>`;
+        results.innerHTML = '';
+        results.appendChild(li);
+      } finally {
+        runButton.disabled = false;
+      }
+    }
+
+    runButton.addEventListener('click', run);
+    run();
+  </script>
+</body>
+</html>

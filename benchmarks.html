@@ -15,7 +15,7 @@
         <a class="navbar-brand fw-bold" href="index.html">ComputeMetrics Hub</a>
 
         <div class="ms-auto d-flex align-items-center gap-2">
-          <button id="themeToggle" class="btn btn-sm btn-outline-secondary">Dark</button>
+          <button id="themeToggle" type="button" class="btn btn-sm btn-outline-secondary">Dark</button>
         </div>
       </div>
     </nav>
@@ -25,47 +25,27 @@
     <section class="mb-3 d-flex flex-column flex-md-row justify-content-between gap-3 align-items-start">
       <div>
         <h1 class="h3 mb-1">AI Model Benchmarks</h1>
-        <p class="text-muted mb-0">Use the configurator below to pick two models and run a comparison.</p>
+        <p class="text-muted mb-0">Pick two models in the configurator and run a side-by-side comparison.</p>
       </div>
-
-      <form id="benchControlsForm" class="d-flex gap-2 align-items-center" autocomplete="off" onsubmit="return false;">
-        <div class="input-group">
-          <span class="input-group-text">Search</span>
-          <input id="globalSearch" name="bench_search_unique" class="form-control" type="search"
-                 placeholder="Filter models across the dataset..." aria-label="Search models"
-                 autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-        </div>
-
-        <select id="sortSelect" class="form-select">
-          <option value="power_desc" selected>Sort: Most powerful</option>
-          <option value="power_asc">Sort: Least powerful</option>
-          <option value="params_desc">Sort: Params (desc)</option>
-          <option value="speed_desc">Sort: Speed (desc)</option>
-        </select>
-      </form>
     </section>
 
-    <!-- Compact quick compare + browse -->
     <section class="mb-4">
-      <div class="selector-card d-flex justify-content-between align-items-center">
+      <div class="selector-card d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
         <div>
           <label class="form-label small-muted">Quick Compare</label>
           <p class="small-muted mb-0">Open the configurator below to choose two models and run a comparison.</p>
         </div>
         <div>
-          <button id="browseBtn" class="btn btn-outline-cta">Browse models</button>
+          <button id="browseBtn" type="button" class="btn btn-outline-cta">Browse models</button>
         </div>
       </div>
     </section>
 
-    <!-- Multi-step form (integrated) -->
     <section id="config-wizard" class="mb-4">
       <div class="form-wizard" aria-label="Configurator wizard">
-
-        <!-- Step 1: Vendor Filter -->
         <div class="form-step wizard-step visible" data-step="1">
-          <h4 class="h6">Step 1 — Vendor Filter</h4>
-          <p class="small-muted">Filter models by their creator to shorten the list</p>
+          <h4 class="h6">Step 1 - Vendor Filter</h4>
+          <p class="small-muted">Filter models by their creator to shorten the list.</p>
           <div class="mt-3">
             <select id="wizardWorkload" class="form-select">
               <option value="all">All Vendors</option>
@@ -78,51 +58,43 @@
           </div>
         </div>
 
-        <!-- Step 2: Models -->
         <div class="form-step wizard-step hidden" data-step="2">
-          <h4 class="h6">Step 2 — Models</h4>
-          <p class="small-muted">Pick two models to compare</p>
+          <h4 class="h6">Step 2 - Models</h4>
+          <p class="small-muted">Pick two models to compare.</p>
           <div class="mt-3 d-flex gap-2">
             <select id="wizardModelA" class="form-select">
-              <option value="">— select —</option>
+              <option value="">- select -</option>
             </select>
             <select id="wizardModelB" class="form-select">
-              <option value="">— select —</option>
+              <option value="">- select -</option>
             </select>
           </div>
         </div>
 
-        <!-- Step 3: Run Configuration -->
         <div class="form-step wizard-step hidden" data-step="3">
-          <h4 class="h6">Step 3 — Run Settings</h4>
-          <p class="small-muted">Tweak inference parameters</p>
+          <h4 class="h6">Step 3 - Run Settings</h4>
+          <p class="small-muted">Tweak inference parameters.</p>
           <div class="mt-3">
             <label class="form-label small-muted">Max tokens</label>
             <input id="wizardMaxTokens" type="number" class="form-control" value="512" />
           </div>
         </div>
 
-        <!-- Navigation Actions -->
         <div class="mt-3 d-flex gap-2">
-          <button id="prevBtn" class="btn btn-outline-cta d-none">Previous</button>
-          <button id="nextBtn" class="btn btn-cta">Next Step</button>
+          <button id="prevBtn" type="button" class="btn btn-outline-cta d-none">Previous</button>
+          <button id="nextBtn" type="button" class="btn btn-cta">Next Step</button>
           <div id="wizardStatus" class="ms-auto small-muted align-self-center">Step 1 of 3</div>
         </div>
       </div>
     </section>
 
-    <!-- Results / comparison area -->
     <section id="comparison-area" class="mb-4" aria-live="polite"></section>
   </main>
 
   <footer class="text-center py-3">
-    <small>ComputeMetrics Hub • Benchmark Viewer</small>
+    <small>ComputeMetrics Hub - Benchmark Viewer</small>
   </footer>
 
-  <!-- Main module script (keeps behavior centralized) -->
-  <script type="module" src="assets/js/main.js"></script>
-
-  <!-- Browse modal (hidden by default) -->
   <div class="modal fade" id="browseModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
       <div class="modal-content">
@@ -154,25 +126,7 @@
     </div>
   </div>
 
-  <!-- Small inline wiring for the integrated wizard (keeps page responsive while main.js loads) -->
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      // Open browse modal
-      const browseBtn = document.getElementById('browseBtn');
-      if (browseBtn) {
-        browseBtn.addEventListener('click', () => {
-          const modalEl = document.getElementById('browseModal');
-          const bsModal = new bootstrap.Modal(modalEl);
-          bsModal.show();
-        });
-      }
-
-      // If main.js exposes a global helper to populate wizard selects, it will do so.
-      // Otherwise main.js will import the dataset and populate wizardModelA/B directly.
-      // This inline script intentionally avoids duplicating dataset logic.
-    });
-  </script>
-
+  <script type="module" src="assets/js/main.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

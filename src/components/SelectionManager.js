@@ -17,7 +17,7 @@ export default class SelectionManager {
       this.tableBody.addEventListener('change', (e) => {
         const target = e.target;
         if (target && target.matches('input.model-select')) {
-          const id = Number(target.dataset.id);
+          const id = String(target.dataset.id);
           if (target.checked) this.selected.add(id);
           else this.selected.delete(id);
           this._updateCompareButton();
@@ -49,7 +49,7 @@ export default class SelectionManager {
     const inputs = Array.from(this.tableBody.querySelectorAll('input.model-select'));
     inputs.forEach(input => {
       input.checked = checked;
-      const id = Number(input.dataset.id);
+      const id = String(input.dataset.id);
       if (checked) this.selected.add(id);
       else this.selected.delete(id);
     });
@@ -66,6 +66,23 @@ export default class SelectionManager {
     return this.models.filter(m => this.selected.has(m.id));
   }
 
+  _formatPrice(value) {
+    if (value == null || value === '') return 'Data Unavailable';
+    const numericValue = Number(value);
+    if (!Number.isFinite(numericValue) || numericValue < 0) return 'Data Unavailable';
+    return `$${numericValue.toLocaleString(undefined, { maximumFractionDigits: 10 })}/token`;
+  }
+
+  _formatUnixDate(value) {
+    const numericValue = Number(value);
+    if (!Number.isFinite(numericValue) || numericValue <= 0) return 'Data Unavailable';
+    return new Date(numericValue * 1000).toLocaleDateString(undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  }
+
   renderComparison() {
     const selected = this.getSelectedModels();
     if (!this.comparisonArea) return;
@@ -75,7 +92,7 @@ export default class SelectionManager {
     }
 
     // Build a simple comparison table
-    const headers = ['Model', 'Vendor', 'Context Window', 'Architecture', 'Params (B)', 'Speed (tps)', 'Quantization'];
+    const headers = ['Model', 'Vendor', 'Context Window', 'Architecture', 'Input Cost', 'Output Cost', 'Added to OpenRouter'];
     const headerRow = headers.map(h => `<th>${h}</th>`).join('');
     const rows = selected.map(model => `
       <tr>
@@ -83,9 +100,9 @@ export default class SelectionManager {
         <td>${model.vendor}</td>
         <td>${model.context_window.toLocaleString()}</td>
         <td>${model.architecture}</td>
-        <td>${model.params_billion}</td>
-        <td>${model.inference_speed_tps}</td>
-        <td>${model.quantization}</td>
+        <td>${this._formatPrice(model.pricing?.prompt)}</td>
+        <td>${this._formatPrice(model.pricing?.completion)}</td>
+        <td>${this._formatUnixDate(model.created)}</td>
       </tr>
     `).join('');
 

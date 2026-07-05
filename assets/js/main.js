@@ -31,7 +31,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function getFilteredSortedModels() {
-    const term = String(globalSearch?.value || '').trim().toLowerCase();
+    const term = String(globalSearch?.value || '').trim();
+    const normalizedTerm = normalizeSearchText(term);
+    const searchTokens = normalizedTerm.split(/\s+/).filter(Boolean);
     const sortMode = sortSelect?.value || 'created_desc';
     const getPriceValue = (model, key) => {
       const price = Number(model?.pricing?.[key]);
@@ -39,8 +41,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     const filtered = globalModelsData.filter(model => {
-      if (!term) return true;
-      return [
+      if (searchTokens.length === 0) return true;
+      const haystack = normalizeSearchText([
         model.model_name,
         model.vendor,
         model.architecture,
@@ -49,8 +51,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         model.pricing?.prompt,
         model.pricing?.completion,
         String(model.id)
-      ].some(value => String(value || '').toLowerCase().includes(term));
+      ].join(' '));
+
+      return searchTokens.every(searchToken => haystack.includes(searchToken));
     });
+
+    if (searchTokens.length > 0) {
+      return sortModelsBySearchRelevance(filtered, term);
+    }
 
     return filtered.sort((a, b) => {
       if (sortMode === 'name_asc') return String(a.model_name || '').localeCompare(String(b.model_name || ''));
@@ -58,6 +66,104 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (sortMode === 'input_cost_asc') return getPriceValue(a, 'prompt') - getPriceValue(b, 'prompt');
       if (sortMode === 'output_cost_asc') return getPriceValue(a, 'completion') - getPriceValue(b, 'completion');
       return (b.created || 0) - (a.created || 0);
+    });
+  }
+
+  function normalizeSearchText(value) {
+    return String(value || '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, ' ')
+      .trim();
+  }
+
+  function getModelPopularityScore(model) {
+    const vendor = normalizeSearchText(model.vendor);
+    const haystack = normalizeSearchText(`${model.vendor || ''} ${model.model_name || ''} ${model.api_id || ''}`);
+    const providerWeights = new Map([
+      ['openai', 120],
+      ['anthropic', 115],
+      ['google', 100],
+      ['meta', 90],
+      ['mistral', 78],
+      ['deepseek', 74],
+      ['x ai', 68],
+      ['qwen', 64],
+      ['cohere', 58]
+    ]);
+    const familyWeights = [
+      ['gpt 5', 190],
+      ['claude sonnet 4', 180],
+      ['gemini 2 5 pro', 172],
+      ['gpt 4 1', 168],
+      ['gpt 4o', 164],
+      ['o3', 154],
+      ['claude 3 7', 152],
+      ['claude 3 5', 146],
+      ['gemini 2 5 flash', 142],
+      ['o4', 138],
+      ['deepseek r1', 132],
+      ['llama 4', 128],
+      ['deepseek v3', 122],
+      ['qwen3', 116],
+      ['llama 3 3', 112],
+      ['mistral large', 104],
+      ['gpt', 88],
+      ['claude', 86],
+      ['gemini', 82],
+      ['llama', 70],
+      ['deepseek', 68],
+      ['qwen', 62],
+      ['mistral', 58]
+    ];
+
+    let score = providerWeights.get(vendor) || 0;
+
+    for (const [needle, weight] of familyWeights) {
+      if (haystack.includes(needle)) score += weight;
+    }
+
+    const contextWindow = Number(model.context_window);
+    if (Number.isFinite(contextWindow) && contextWindow > 0) {
+      score += Math.min(40, Math.log2(contextWindow) * 2);
+    }
+
+    return score;
+  }
+
+  function getSearchRelevanceScore(model, searchTerm) {
+    const normalizedTerm = normalizeSearchText(searchTerm);
+    if (!normalizedTerm) return 0;
+
+    const modelName = normalizeSearchText(model.model_name);
+    const apiId = normalizeSearchText(model.api_id || model.id);
+    const vendor = normalizeSearchText(model.vendor);
+    const haystack = `${modelName} ${apiId} ${vendor}`;
+    const terms = normalizedTerm.split(/\s+/).filter(Boolean);
+
+    if (modelName === normalizedTerm || apiId === normalizedTerm) return 1200;
+    if (modelName.startsWith(normalizedTerm) || apiId.startsWith(normalizedTerm)) return 900;
+    if (terms.every(searchToken => haystack.includes(searchToken))) return 650;
+    if (terms.some(searchToken => modelName.split(/\s+/).some(word => word.startsWith(searchToken)))) return 420;
+    if (haystack.includes(normalizedTerm)) return 280;
+
+    return 0;
+  }
+
+  function sortModelsBySearchRelevance(models, searchTerm) {
+    return [...models].sort((a, b) => {
+      const relevanceDiff = getSearchRelevanceScore(b, searchTerm) - getSearchRelevanceScore(a, searchTerm);
+      if (relevanceDiff !== 0) return relevanceDiff;
+
+      const popularityDiff = getModelPopularityScore(b) - getModelPopularityScore(a);
+      if (popularityDiff !== 0) return popularityDiff;
+
+      const contextDiff = (Number(b.context_window) || 0) - (Number(a.context_window) || 0);
+      if (contextDiff !== 0) return contextDiff;
+
+      const createdDiff = (Number(b.created) || 0) - (Number(a.created) || 0);
+      if (createdDiff !== 0) return createdDiff;
+
+      return String(a.model_name || '').localeCompare(String(b.model_name || ''));
     });
   }
 

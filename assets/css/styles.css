@@ -1,5 +1,5 @@
-/* Hand-tuned theme for ComputeMetrics Hub.
-   Clean surfaces, soft contrast, and a little motion so the app feels intentional. */
+/* Note regarding use of AI: syntaxe and layout was AI written, 
+parameters were hand tweaked */
 :root{
   --bg:#d9e0ea;
   --bg-accent: radial-gradient(circle at top left, rgba(105, 158, 255, 0.18), transparent 38%),
@@ -152,7 +152,7 @@ body::before{
 }
 .wizard-step.visible{
   display:block;
-  max-height:420px;
+  max-height:720px;
 }
 .wizard-step.active{
   opacity:1;

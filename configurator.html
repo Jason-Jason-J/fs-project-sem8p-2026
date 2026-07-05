@@ -31,16 +31,33 @@
     <section id="config-wizard" class="mb-4">
       <div class="form-wizard" aria-label="Configurator wizard">
         <div class="form-step wizard-step visible" data-step="1">
-          <h4 class="h6">Step 1 - Vendor Filter</h4>
-          <p class="small-muted">Filter models by their creator to shorten the list.</p>
-          <div class="mt-3">
-            <select id="wizardWorkload" class="form-select">
+          <h4 class="h6">Step 1 - Vendor Filters</h4>
+          <p class="small-muted">Filter each side by creator to shorten the model lists.</p>
+          <div class="mt-3 row g-3">
+            <div class="col-md-6">
+              <label for="wizardVendorA" class="form-label small-muted">Vendor</label>
+              <select id="wizardVendorA" class="form-select">
+                <option value="all">All Vendors</option>
+                <option value="OpenAI">OpenAI</option>
+                <option value="Anthropic">Anthropic</option>
+                <option value="Google">Google</option>
+                <option value="Meta">Meta</option>
+                <option value="Mistral">Mistral</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label for="wizardVendorB" class="form-label small-muted">Vendor</label>
+              <select id="wizardVendorB" class="form-select">
+                <option value="all">All Vendors</option>
+                <option value="OpenAI">OpenAI</option>
+                <option value="Anthropic">Anthropic</option>
+                <option value="Google">Google</option>
+                <option value="Meta">Meta</option>
+                <option value="Mistral">Mistral</option>
+              </select>
+            </div>
+            <select id="wizardWorkload" class="form-select d-none" aria-hidden="true" tabindex="-1">
               <option value="all">All Vendors</option>
-              <option value="OpenAI">OpenAI</option>
-              <option value="Anthropic">Anthropic</option>
-              <option value="Google">Google</option>
-              <option value="Meta">Meta</option>
-              <option value="Mistral">Mistral</option>
             </select>
           </div>
         </div>
@@ -48,13 +65,19 @@
         <div class="form-step wizard-step hidden" data-step="2">
           <h4 class="h6">Step 2 - Models</h4>
           <p class="small-muted">Pick two models to compare.</p>
-          <div class="mt-3 d-flex gap-2">
-            <select id="wizardModelA" class="form-select">
-              <option value="">- select -</option>
-            </select>
-            <select id="wizardModelB" class="form-select">
-              <option value="">- select -</option>
-            </select>
+          <div class="mt-3 row g-3">
+            <div class="col-md-6">
+              <label for="wizardModelA" class="form-label small-muted">Model</label>
+              <select id="wizardModelA" class="form-select">
+                <option value="">- select -</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label for="wizardModelB" class="form-label small-muted">Model</label>
+              <select id="wizardModelB" class="form-select">
+                <option value="">- select -</option>
+              </select>
+            </div>
           </div>
         </div>
 

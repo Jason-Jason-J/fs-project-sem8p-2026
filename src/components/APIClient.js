@@ -210,6 +210,104 @@ export default class APIClient {
     return data.find(model => String(model.id) === String(id)) || null;
   }
 
+  _normalizeSearchText(value) {
+    return String(value || '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, ' ')
+      .trim();
+  }
+
+  _getModelPopularityScore(model) {
+    const vendor = this._normalizeSearchText(model.vendor);
+    const haystack = this._normalizeSearchText(`${model.vendor || ''} ${model.model_name || ''} ${model.api_id || ''}`);
+    const providerWeights = new Map([
+      ['openai', 120],
+      ['anthropic', 115],
+      ['google', 100],
+      ['meta', 90],
+      ['mistral', 78],
+      ['deepseek', 74],
+      ['x ai', 68],
+      ['qwen', 64],
+      ['cohere', 58]
+    ]);
+    const familyWeights = [
+      ['gpt 5', 190],
+      ['claude sonnet 4', 180],
+      ['gemini 2 5 pro', 172],
+      ['gpt 4 1', 168],
+      ['gpt 4o', 164],
+      ['o3', 154],
+      ['claude 3 7', 152],
+      ['claude 3 5', 146],
+      ['gemini 2 5 flash', 142],
+      ['o4', 138],
+      ['deepseek r1', 132],
+      ['llama 4', 128],
+      ['deepseek v3', 122],
+      ['qwen3', 116],
+      ['llama 3 3', 112],
+      ['mistral large', 104],
+      ['gpt', 88],
+      ['claude', 86],
+      ['gemini', 82],
+      ['llama', 70],
+      ['deepseek', 68],
+      ['qwen', 62],
+      ['mistral', 58]
+    ];
+
+    let score = providerWeights.get(vendor) || 0;
+
+    for (const [needle, weight] of familyWeights) {
+      if (haystack.includes(needle)) score += weight;
+    }
+
+    const contextWindow = Number(model.context_window);
+    if (Number.isFinite(contextWindow) && contextWindow > 0) {
+      score += Math.min(40, Math.log2(contextWindow) * 2);
+    }
+
+    return score;
+  }
+
+  _getSearchRelevanceScore(model, searchTerm) {
+    const normalizedTerm = this._normalizeSearchText(searchTerm);
+    if (!normalizedTerm) return 0;
+
+    const modelName = this._normalizeSearchText(model.model_name);
+    const apiId = this._normalizeSearchText(model.api_id || model.id);
+    const vendor = this._normalizeSearchText(model.vendor);
+    const haystack = `${modelName} ${apiId} ${vendor}`;
+    const terms = normalizedTerm.split(/\s+/).filter(Boolean);
+
+    if (modelName === normalizedTerm || apiId === normalizedTerm) return 1200;
+    if (modelName.startsWith(normalizedTerm) || apiId.startsWith(normalizedTerm)) return 900;
+    if (terms.every(term => haystack.includes(term))) return 650;
+    if (terms.some(term => modelName.split(/\s+/).some(word => word.startsWith(term)))) return 420;
+    if (haystack.includes(normalizedTerm)) return 280;
+
+    return 0;
+  }
+
+  _sortModelsBySearchRelevance(models, searchTerm) {
+    return [...models].sort((a, b) => {
+      const relevanceDiff = this._getSearchRelevanceScore(b, searchTerm) - this._getSearchRelevanceScore(a, searchTerm);
+      if (relevanceDiff !== 0) return relevanceDiff;
+
+      const popularityDiff = this._getModelPopularityScore(b) - this._getModelPopularityScore(a);
+      if (popularityDiff !== 0) return popularityDiff;
+
+      const contextDiff = (Number(b.context_window) || 0) - (Number(a.context_window) || 0);
+      if (contextDiff !== 0) return contextDiff;
+
+      const createdDiff = (Number(b.created) || 0) - (Number(a.created) || 0);
+      if (createdDiff !== 0) return createdDiff;
+
+      return String(a.model_name || '').localeCompare(String(b.model_name || ''));
+    });
+  }
+
   async searchModels(keyword) {
     const data = await this.fetchBenchmarks();
     if (!Array.isArray(data) || data.length === 0) return [];
@@ -217,10 +315,12 @@ export default class APIClient {
     const term = String(keyword || '').trim().toLowerCase();
     if (!term) return [];
 
-    return data.filter(model =>
-      String(model.model_name || '').toLowerCase().includes(term) ||
-      String(model.vendor || '').toLowerCase().includes(term) ||
-      String(model.api_id || '').toLowerCase().includes(term)
-    );
+    const searchTerms = this._normalizeSearchText(term).split(/\s+/).filter(Boolean);
+    const results = data.filter(model => {
+      const haystack = this._normalizeSearchText(`${model.model_name || ''} ${model.vendor || ''} ${model.api_id || ''} ${model.id || ''}`);
+      return searchTerms.every(searchTerm => haystack.includes(searchTerm));
+    });
+
+    return this._sortModelsBySearchRelevance(results, term);
   }
 }

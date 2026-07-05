@@ -26,6 +26,17 @@ const MOCK_API_MODELS = [
     },
     created: 1718841600,
     description: 'Anthropic balanced reasoning model'
+  },
+  {
+    id: 'small-lab/gpt-niche-experiment',
+    name: 'GPT Niche Experiment',
+    context_length: 8192,
+    pricing: {
+      prompt: '0.0000001',
+      completion: '0.0000002'
+    },
+    created: 1710000000,
+    description: 'Less common experimental model'
   }
 ];
 
@@ -120,6 +131,7 @@ export async function runMetricsTests() {
 
     const results = await client.searchModels('gpt');
     assert(results.length > 0, 'expected at least one matching model');
+    assert(results[0].id === 'openai/gpt-4o', 'popular GPT models should rank above niche GPT matches');
   });
 
   return suite.run();

@@ -31,6 +31,13 @@ export default class FormWizard {
     if (this.nextBtn) this.nextBtn.addEventListener('click', () => this.next());
     if (this.prevBtn) this.prevBtn.addEventListener('click', () => this.prev());
 
+    this.root.addEventListener('change', (event) => {
+      const id = event.target?.id;
+      if (id === 'wizardVendorA') this._renderSideDropdown('A');
+      if (id === 'wizardVendorB') this._renderSideDropdown('B');
+      if (id === 'wizardWorkload') this._applyVendorFilter();
+    });
+
     document.addEventListener('keydown', (e) => {
       if (!this.root.contains(document.activeElement)) return;
       if (e.key === 'ArrowRight') this.next();
@@ -76,6 +83,7 @@ export default class FormWizard {
     }
     this.apiDataset = dataArray;
     this._renderVendorOptions(dataArray);
+    this._renderDropdowns();
   }
 
   _escapeHtml(value) {
@@ -112,42 +120,73 @@ export default class FormWizard {
     return String(value || '').trim().replace(/^~+/, '').toUpperCase();
   }
 
+  _getVendorPopularityScore(vendor) {
+    const normalizedVendor = this._normalizeVendor(vendor);
+    const scores = new Map([
+      ['OPENAI', 120],
+      ['ANTHROPIC', 115],
+      ['GOOGLE', 105],
+      ['META', 95],
+      ['MISTRAL', 82],
+      ['DEEPSEEK', 78],
+      ['X AI', 72],
+      ['QWEN', 68],
+      ['COHERE', 62],
+      ['PERPLEXITY', 56],
+      ['MICROSOFT', 52],
+      ['AMAZON', 48],
+      ['NVIDIA', 44]
+    ]);
+
+    return scores.get(normalizedVendor) || 0;
+  }
+
   _applyVendorFilter() {
-    const vendorSelect = document.getElementById('wizardWorkload');
-    const selectedVendor = vendorSelect ? this._normalizeVendor(vendorSelect.value) : 'ALL';
+    const legacyVendorSelect = document.getElementById('wizardWorkload');
+    const legacyVendor = legacyVendorSelect?.value;
 
-    let filteredData = this.apiDataset;
-
-    if (selectedVendor !== 'ALL') {
-      filteredData = this.apiDataset.filter(model =>
-        this._normalizeVendor(model.vendor) === selectedVendor
-      );
+    if (legacyVendor) {
+      const vendorA = document.getElementById('wizardVendorA');
+      const vendorB = document.getElementById('wizardVendorB');
+      if (vendorA && !vendorA.value) vendorA.value = legacyVendor;
+      if (vendorB && !vendorB.value) vendorB.value = legacyVendor;
     }
 
-    this._renderDropdowns(filteredData);
+    this._renderDropdowns();
   }
 
   _renderVendorOptions(modelsArray) {
-    const vendorSelect = document.getElementById('wizardWorkload');
-    if (!vendorSelect) return;
+    const vendorSelects = [
+      document.getElementById('wizardVendorA'),
+      document.getElementById('wizardVendorB'),
+      document.getElementById('wizardWorkload')
+    ].filter(Boolean);
 
-    const currentValue = vendorSelect.value || 'all';
+    if (vendorSelects.length === 0) return;
+
     const vendors = Array.from(new Set(
       modelsArray
         .map(model => String(model.vendor || '').trim())
         .filter(Boolean)
-    )).sort((a, b) => a.localeCompare(b));
+    )).sort((a, b) => {
+      const popularityDiff = this._getVendorPopularityScore(b) - this._getVendorPopularityScore(a);
+      if (popularityDiff !== 0) return popularityDiff;
+      return a.localeCompare(b);
+    });
 
-    vendorSelect.innerHTML = [
-      '<option value="all">All Vendors</option>',
-      ...vendors.map(vendor => `<option value="${this._escapeHtml(vendor)}">${this._escapeHtml(vendor)}</option>`)
-    ].join('');
+    for (const vendorSelect of vendorSelects) {
+      const currentValue = vendorSelect.value || 'all';
+      vendorSelect.innerHTML = [
+        '<option value="all">All Vendors</option>',
+        ...vendors.map(vendor => `<option value="${this._escapeHtml(vendor)}">${this._escapeHtml(vendor)}</option>`)
+      ].join('');
 
-    const normalizedCurrent = this._normalizeVendor(currentValue);
-    const hasCurrentValue = normalizedCurrent === 'ALL' || Array.from(vendorSelect.options)
-      .some(option => this._normalizeVendor(option.value) === normalizedCurrent);
+      const normalizedCurrent = this._normalizeVendor(currentValue);
+      const hasCurrentValue = normalizedCurrent === 'ALL' || Array.from(vendorSelect.options)
+        .some(option => this._normalizeVendor(option.value) === normalizedCurrent);
 
-    vendorSelect.value = hasCurrentValue ? currentValue : 'all';
+      vendorSelect.value = hasCurrentValue ? currentValue : 'all';
+    }
   }
 
   _bindSelectTypeahead(select) {
@@ -184,16 +223,39 @@ export default class FormWizard {
     });
   }
 
-  _renderDropdowns(modelsArray) {
-    const selectA = document.getElementById('wizardModelA');
-    const selectB = document.getElementById('wizardModelB');
+  _sortModelsByLatest(modelsArray) {
+    return [...modelsArray].sort((a, b) => {
+      const createdDiff = (Number(b.created) || 0) - (Number(a.created) || 0);
+      if (createdDiff !== 0) return createdDiff;
 
-    if (!selectA || !selectB) return;
+      return String(a.model_name || '').localeCompare(String(b.model_name || ''));
+    });
+  }
+
+  _getModelsForSide(side) {
+    const vendorSelect = document.getElementById(`wizardVendor${side}`) || document.getElementById('wizardWorkload');
+    const selectedVendor = vendorSelect ? this._normalizeVendor(vendorSelect.value) : 'ALL';
+
+    let filteredData = this.apiDataset;
+
+    if (selectedVendor !== 'ALL') {
+      filteredData = filteredData.filter(model =>
+        this._normalizeVendor(model.vendor) === selectedVendor
+      );
+    }
+
+    return this._sortModelsByLatest(filteredData);
+  }
+
+  _renderSideDropdown(side) {
+    const select = document.getElementById(`wizardModel${side}`);
+    if (!select) return;
+
+    const modelsArray = this._getModelsForSide(side);
+    const selectedValue = select.value;
 
     if (modelsArray.length === 0) {
-      const emptyHtml = `<option value="">- No models found -</option>`;
-      selectA.innerHTML = emptyHtml;
-      selectB.innerHTML = emptyHtml;
+      select.innerHTML = `<option value="">- No models found -</option>`;
       return;
     }
 
@@ -201,11 +263,18 @@ export default class FormWizard {
       `<option value="${this._escapeHtml(model.id)}">${this._escapeHtml(model.model_name)}</option>`
     ).join('');
 
-    selectA.innerHTML = `<option value="">- select Model A -</option>${optionsHtml}`;
-    selectB.innerHTML = `<option value="">- select Model B -</option>${optionsHtml}`;
+    select.innerHTML = `<option value="">- select model -</option>${optionsHtml}`;
 
-    this._bindSelectTypeahead(selectA);
-    this._bindSelectTypeahead(selectB);
+    if (modelsArray.some(model => String(model.id) === String(selectedValue))) {
+      select.value = selectedValue;
+    }
+
+    this._bindSelectTypeahead(select);
+  }
+
+  _renderDropdowns() {
+    this._renderSideDropdown('A');
+    this._renderSideDropdown('B');
   }
 
   submit() {
@@ -217,11 +286,11 @@ export default class FormWizard {
     const payload = { modelA, modelB, maxTokens };
 
     if (!modelA || !modelB) {
-      alert('Please select both Model A and Model B before submitting.');
+      alert('Please select both models before submitting.');
       return;
     }
     if (modelA === modelB) {
-      alert('Model A and Model B must be different.');
+      alert('The selected models must be different.');
       return;
     }
     if (!Number.isFinite(maxTokens) || maxTokens <= 0) {

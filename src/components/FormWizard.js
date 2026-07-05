@@ -1,17 +1,188 @@
-export class FormWizard {
-  constructor() {
-    this.currentStep = 0;
-    const nextBtn = document.querySelector('#nextBtn');
+// src/components/FormWizard.js
+// Manages the multi-step form state, DOM transitions, and client-side data filtering.
+
+export default class FormWizard {
+  constructor({
+    rootSelector = '#config-wizard',
+    stepSelector = '.wizard-step',
+    nextSelector = '#nextBtn',
+    prevSelector = '#prevBtn',
+    statusSelector = '#wizardStatus'
+  } = {}) {
+    this.root = document.querySelector(rootSelector);
+    if (!this.root) {
+      console.error('FormWizard: Root element not found.');
+      return;
+    }
+
+    this.steps = Array.from(this.root.querySelectorAll(stepSelector));
+    this.nextBtn = this.root.querySelector(nextSelector);
+    this.prevBtn = this.root.querySelector(prevSelector);
+    this.statusEl = this.root.querySelector(statusSelector);
+    this.currentIndex = 0;
     
-    if (nextBtn) {
-      nextBtn.addEventListener('click', () => {
-        this.nextStep();
-      });
+    // Internal state to hold the API data for client-side filtering
+    this.apiDataset = [];
+
+    this._bindHandlers();
+    this._showStep(this.currentIndex, true);
+  }
+
+  _bindHandlers() {
+    if (this.nextBtn) this.nextBtn.addEventListener('click', () => this.next());
+    if (this.prevBtn) this.prevBtn.addEventListener('click', () => this.prev());
+    
+    // Accessibility: Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+      if (!this.root.contains(document.activeElement)) return;
+      if (e.key === 'ArrowRight') this.next();
+      if (e.key === 'ArrowLeft') this.prev();
+    });
+  }
+
+  _showStep(index) {
+    this.steps.forEach((el, i) => {
+      if (i === index) {
+        el.classList.remove('hidden');
+        el.classList.add('visible');
+        void el.offsetWidth; // Force a browser reflow for CSS transition
+        el.classList.add('active');
+      } else {
+        el.classList.remove('active', 'visible');
+        el.classList.add('hidden');
+      }
+    });
+
+    this._updateControls(index);
+  }
+
+  _updateControls(index) {
+    if (this.prevBtn) {
+      if (index === 0) {
+        this.prevBtn.classList.add('d-none');
+      } else {
+        this.prevBtn.classList.remove('d-none');
+      }
+    }
+
+    if (this.nextBtn) {
+      if (index === this.steps.length - 1) {
+        this.nextBtn.textContent = 'Submit Configuration';
+      } else {
+        this.nextBtn.textContent = 'Next Step';
+      }
+    }
+
+    if (this.statusEl) {
+      this.statusEl.textContent = `Step ${index + 1} of ${this.steps.length}`;
     }
   }
 
-  nextStep() {
-    this.currentStep += 1;
-    console.log(`Advanced to step: ${this.currentStep}`);
+  // Receives the raw data from main.js and stores it locally
+  setDataset(dataArray) {
+    if (!Array.isArray(dataArray)) {
+      console.error('FormWizard: Expected an array for dataset.');
+      return;
+    }
+    this.apiDataset = dataArray;
   }
+
+  next() {
+    // Intercept the transition from Step 1 (index 0) to Step 2 (index 1)
+    if (this.currentIndex === 0) {
+      this._applyVendorFilter();
+    }
+
+    if (this.currentIndex < this.steps.length - 1) {
+      this.currentIndex += 1;
+      this._showStep(this.currentIndex);
+    } else if (this.currentIndex === this.steps.length - 1) {
+      this.submit();
+    }
+  }
+
+  prev() {
+    if (this.currentIndex > 0) {
+      this.currentIndex -= 1;
+      this._showStep(this.currentIndex);
+    }
+  }
+
+  // Filters the dataset based on Step 1 input and populates Step 2
+  _applyVendorFilter() {
+    const vendorSelect = document.getElementById('wizardWorkload');
+    const selectedVendor = vendorSelect ? vendorSelect.value.toUpperCase() : 'ALL';
+    
+    let filteredData = this.apiDataset;
+    
+    // Apply client-side filtering if a specific vendor is chosen
+    if (selectedVendor !== 'ALL') {
+      filteredData = this.apiDataset.filter(model => model.vendor === selectedVendor);
+    }
+
+    this._renderDropdowns(filteredData);
+  }
+
+  // Internal method to handle DOM injection for the dropdowns
+  _renderDropdowns(modelsArray) {
+    const selectA = document.getElementById('wizardModelA');
+    const selectB = document.getElementById('wizardModelB');
+    
+    if (!selectA || !selectB) return;
+
+    if (modelsArray.length === 0) {
+      const emptyHtml = `<option value="">— No models found —</option>`;
+      selectA.innerHTML = emptyHtml;
+      selectB.innerHTML = emptyHtml;
+      return;
+    }
+
+    const optionsHtml = modelsArray.map(model => 
+      `<option value="${model.id}">${model.model_name || model.name}</option>`
+    ).join('');
+    
+    selectA.innerHTML = `<option value="">— select Model A —</option>${optionsHtml}`;
+    selectB.innerHTML = `<option value="">— select Model B —</option>${optionsHtml}`;
+  }
+
+  submit() {
+  // Collect values and normalize
+  const modelA = (document.getElementById('wizardModelA')?.value || '').trim();
+  const modelB = (document.getElementById('wizardModelB')?.value || '').trim();
+  const maxTokensRaw = document.getElementById('wizardMaxTokens')?.value;
+  const maxTokens = Number(maxTokensRaw);
+
+  const payload = { modelA, modelB, maxTokens };
+
+  // Basic validation
+  if (!modelA || !modelB) {
+    alert('Please select both Model A and Model B before submitting.');
+    return;
+  }
+  if (modelA === modelB) {
+    alert('Model A and Model B must be different.');
+    return;
+  }
+  if (!Number.isFinite(maxTokens) || maxTokens <= 0) {
+    alert('Max tokens must be a positive number.');
+    return;
+  }
+
+  // Debug log
+  console.log('Wizard Payload Ready:', payload);
+
+  // Dispatch a custom event so main.js can handle the payload
+  const event = new CustomEvent('wizardSubmitted', { detail: payload });
+  document.dispatchEvent(event);
+
+  // Optional: persist locally and show a quick UI confirmation
+  try {
+    localStorage.setItem('cmh_last_config', JSON.stringify(payload));
+  } catch (e) {
+    console.warn('Could not persist config to localStorage', e);
+  }
+
+  // Return payload for callers/tests
+  return payload;
+}
 }

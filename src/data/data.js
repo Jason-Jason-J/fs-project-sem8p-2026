@@ -1,18 +1,52 @@
+// src/data/data.js
+// AI_BENCHMARK_DATABASE - expanded dataset with vendors, submodels, and basic metrics.
+// Fields used by the UI: id, model_name, vendor, submodel, context_window, architecture, params_billion, inference_speed_tps, quantization, notes
+
 export const AI_BENCHMARK_DATABASE = [
-  { id: 1, model_name: "Claude 3.5 Sonnet", vendor: "Anthropic", context_window: 200000, architecture: "Dense", params_billion: 70, inference_speed_tps: 1200, quantization: "8-bit (INT8)", notes: "Instruction-following model with very large context support." },
-  { id: 2, model_name: "GPT-4o", vendor: "OpenAI", context_window: 128000, architecture: "Dense", params_billion: 175, inference_speed_tps: 950, quantization: "8-bit (INT8)", notes: "High-quality reasoning with balanced latency and throughput." },
-  { id: 3, model_name: "DeepSeek R1", vendor: "DeepSeek Labs", context_window: 65536, architecture: "MoE", params_billion: 120, inference_speed_tps: 1400, quantization: "4-bit (Q4_0)", notes: "Mixture-of-experts variant optimized for retrieval tasks." },
-  { id: 4, model_name: "Llama 3.3", vendor: "Meta", context_window: 32000, architecture: "Dense", params_billion: 65, inference_speed_tps: 1600, quantization: "4-bit (Q4_0)", notes: "Open-weight baseline; efficient on consumer GPUs." },
-  { id: 5, model_name: "Gemini Ultra", vendor: "Google", context_window: 256000, architecture: "Dense", params_billion: 200, inference_speed_tps: 800, quantization: "8-bit (INT8)", notes: "Very large context; higher latency but strong multimodal potential." },
-  { id: 6, model_name: "Orion Lite", vendor: "OrionAI", context_window: 16384, architecture: "Dense", params_billion: 13, inference_speed_tps: 4200, quantization: "INT4", notes: "Edge-optimized small model with excellent CPU throughput." },
-  { id: 7, model_name: "Mistral 2X", vendor: "Mistral", context_window: 65536, architecture: "Dense", params_billion: 70, inference_speed_tps: 1500, quantization: "4-bit (Q4_0)", notes: "High efficiency per parameter; strong for generation." },
-  { id: 8, model_name: "Cerebra Raptor", vendor: "Cerebra", context_window: 48000, architecture: "MoE", params_billion: 90, inference_speed_tps: 1300, quantization: "8-bit (INT8)", notes: "MoE routing yields high peak performance on specialized infra." },
-  { id: 9, model_name: "Falcon Nova", vendor: "TechnologyX", context_window: 32000, architecture: "Dense", params_billion: 40, inference_speed_tps: 2200, quantization: "4-bit (Q4_0)", notes: "Cost-effective model for standard NLP tasks." },
-  { id: 10, model_name: "Hermes 1.0", vendor: "HermesAI", context_window: 12288, architecture: "Dense", params_billion: 7, inference_speed_tps: 5200, quantization: "INT4", notes: "Tiny model for on-device inference and low-latency apps." },
-  { id: 11, model_name: "Atlas XL", vendor: "Atlas Labs", context_window: 96000, architecture: "Dense", params_billion: 110, inference_speed_tps: 900, quantization: "8-bit (INT8)", notes: "Balanced large model with extended context and stable outputs." },
-  { id: 12, model_name: "Nebula CodeGen", vendor: "NebulaAI", context_window: 64000, architecture: "Dense", params_billion: 40, inference_speed_tps: 1800, quantization: "4-bit (Q4_0)", notes: "Specialized for code generation with tokenization optimizations." },
-  { id: 13, model_name: "Echo Multimodal", vendor: "EchoAI", context_window: 48000, architecture: "Dense", params_billion: 85, inference_speed_tps: 1100, quantization: "8-bit (INT8)", notes: "Multimodal model with image+text fusion; slightly slower on text-only tasks." },
-  { id: 14, model_name: "VectorMind R2", vendor: "VectorMind", context_window: 20000, architecture: "Dense", params_billion: 25, inference_speed_tps: 3000, quantization: "INT8", notes: "Optimized for embedding generation and retrieval pipelines." },
-  { id: 15, model_name: "Astra Hybrid", vendor: "Astra Systems", context_window: 72000, architecture: "MoE", params_billion: 140, inference_speed_tps: 1250, quantization: "8-bit (INT8)", notes: "Hybrid MoE design for high-capacity tasks with conditional routing." },
-  { id: 16, model_name: "MiniMuse", vendor: "OpenSource", context_window: 8192, architecture: "Dense", params_billion: 3, inference_speed_tps: 7600, quantization: "INT4", notes: "Ultra-small open model for prototyping and edge demos." }
+  // OpenAI family
+  { id: 1, model_name: "gpt-4o", vendor: "OpenAI", submodel: "gpt-4o-mini", context_window: 32768, architecture: "transformer", params_billion: 175, inference_speed_tps: 1200, quantization: "fp16", notes: "OpenAI high-capacity family" },
+  { id: 2, model_name: "gpt-4o", vendor: "OpenAI", submodel: "gpt-4o-large", context_window: 32768, architecture: "transformer", params_billion: 280, inference_speed_tps: 900, quantization: "fp16", notes: "Large variant" },
+  { id: 3, model_name: "gpt-4o-mini", vendor: "OpenAI", submodel: "gpt-4o-mini", context_window: 8192, architecture: "transformer", params_billion: 20, inference_speed_tps: 4000, quantization: "int8", notes: "Efficient mini variant" },
+
+  // OpenAI ChatGPT family (legacy names for familiarity)
+  { id: 4, model_name: "gpt-4", vendor: "OpenAI", submodel: "gpt-4-32k", context_window: 32768, architecture: "transformer", params_billion: 175, inference_speed_tps: 800, quantization: "fp16", notes: "High context window" },
+  { id: 5, model_name: "gpt-4", vendor: "OpenAI", submodel: "gpt-4-8k", context_window: 8192, architecture: "transformer", params_billion: 175, inference_speed_tps: 1200, quantization: "fp16", notes: "" },
+
+  // Google Gemini family
+  { id: 6, model_name: "gemini-pro", vendor: "Google", submodel: "gemini-pro-1.0", context_window: 65536, architecture: "transformer", params_billion: 300, inference_speed_tps: 700, quantization: "fp16", notes: "High-capacity Gemini Pro" },
+  { id: 7, model_name: "gemini-ultra", vendor: "Google", submodel: "gemini-ultra-1.0", context_window: 131072, architecture: "transformer", params_billion: 600, inference_speed_tps: 450, quantization: "fp16", notes: "Ultra large context" },
+  { id: 8, model_name: "gemini-mini", vendor: "Google", submodel: "gemini-mini", context_window: 8192, architecture: "transformer", params_billion: 18, inference_speed_tps: 4200, quantization: "int8", notes: "Edge/efficient variant" },
+
+  // Anthropic family
+  { id: 9, model_name: "claude-3", vendor: "Anthropic", submodel: "claude-3-opus", context_window: 131072, architecture: "transformer", params_billion: 280, inference_speed_tps: 650, quantization: "fp16", notes: "High-context Claude 3" },
+  { id: 10, model_name: "claude-3", vendor: "Anthropic", submodel: "claude-3-mini", context_window: 32768, architecture: "transformer", params_billion: 40, inference_speed_tps: 2200, quantization: "int8", notes: "Efficient Claude variant" },
+
+  // Meta / Llama family
+  { id: 11, model_name: "llama-3", vendor: "Meta", submodel: "llama-3-70b", context_window: 32768, architecture: "transformer", params_billion: 70, inference_speed_tps: 1100, quantization: "int8", notes: "" },
+  { id: 12, model_name: "llama-3", vendor: "Meta", submodel: "llama-3-13b", context_window: 32768, architecture: "transformer", params_billion: 13, inference_speed_tps: 3000, quantization: "int8", notes: "" },
+
+  // Mistral / Mosaic
+  { id: 13, model_name: "mistral-large", vendor: "Mistral", submodel: "mistral-7b", context_window: 8192, architecture: "transformer", params_billion: 7, inference_speed_tps: 3800, quantization: "int8", notes: "" },
+
+  // Cohere
+  { id: 14, model_name: "command-xlarge", vendor: "Cohere", submodel: "command-xlarge", context_window: 8192, architecture: "transformer", params_billion: 52, inference_speed_tps: 1500, quantization: "fp16", notes: "" },
+
+  // GitHub Copilot family (Microsoft / GitHub)
+  { id: 15, model_name: "github-copilot", vendor: "GitHub", submodel: "copilot-codegen-v1", context_window: 16384, architecture: "transformer", params_billion: 60, inference_speed_tps: 1400, quantization: "fp16", notes: "Code-specialized model" },
+  { id: 16, model_name: "github-copilot", vendor: "GitHub", submodel: "copilot-codegen-small", context_window: 8192, architecture: "transformer", params_billion: 12, inference_speed_tps: 3600, quantization: "int8", notes: "Lightweight code model" },
+
+  // Open-source smaller models
+  { id: 17, model_name: "falcon", vendor: "TII", submodel: "falcon-40b", context_window: 8192, architecture: "transformer", params_billion: 40, inference_speed_tps: 900, quantization: "int8", notes: "" },
+  { id: 18, model_name: "starcoder", vendor: "BigCode", submodel: "starcoder-15b", context_window: 16384, architecture: "transformer", params_billion: 15, inference_speed_tps: 1600, quantization: "int8", notes: "Code-focused" },
+
+  // Smaller / edge models
+  { id: 19, model_name: "tiny-llm", vendor: "Community", submodel: "tiny-1", context_window: 2048, architecture: "transformer", params_billion: 1.2, inference_speed_tps: 12000, quantization: "int8", notes: "Edge/embedded" },
+
+  // Add more submodels and variants for coverage
+  { id: 20, model_name: "gpt-4o", vendor: "OpenAI", submodel: "gpt-4o-vision", context_window: 65536, architecture: "multimodal-transformer", params_billion: 220, inference_speed_tps: 600, quantization: "fp16", notes: "Vision-capable variant" },
+  { id: 21, model_name: "claude-3", vendor: "Anthropic", submodel: "claude-3-vision", context_window: 65536, architecture: "multimodal-transformer", params_billion: 300, inference_speed_tps: 520, quantization: "fp16", notes: "Vision-enabled" },
+
+  // Placeholder entries to expand dataset
+  { id: 22, model_name: "gemini-pro", vendor: "Google", submodel: "gemini-pro-code", context_window: 65536, architecture: "transformer", params_billion: 320, inference_speed_tps: 680, quantization: "fp16", notes: "Code-optimized" },
+  { id: 23, model_name: "anthropic-claude", vendor: "Anthropic", submodel: "claude-2-1.3", context_window: 9000, architecture: "transformer", params_billion: 1.3, inference_speed_tps: 4200, quantization: "int8", notes: "Older small variant" }
 ];

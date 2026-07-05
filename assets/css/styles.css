@@ -1,0 +1,182 @@
+/* Note regarding the use of AI: The structure + syntaxe were ai generated, this serves as a solid
+layout to start off of, hand-written modifications were made by me (The student) 
+to better fit the vision I was going for without going through the hassle of manual styling and
+syntaxe debugging
+ */
+:root{
+  --bg:#f6f8fb;
+  --panel:#ffffff;
+  --muted:#6b7280;
+  --text:#0f1724;
+  --accent:#0d6efd;
+  --cta-gradient: linear-gradient(90deg,#0d6efd,#06b6d4);
+  --card-radius:12px;
+  --glass: rgba(15,23,36,0.03);
+}
+
+/* Dark mode variables */
+:root[data-theme="dark"]{
+  --bg: #071025;
+  --panel: rgba(255,255,255,0.03);
+  --muted:#9aa4b2;
+  --text:#e6eef8;
+  --accent:#60a5fa;
+  --cta-gradient: linear-gradient(90deg,#60a5fa,#6ee7b7);
+}
+
+/* Base */
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  background:var(--bg);
+  color:var(--text);
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  padding-bottom:40px;
+}
+
+/* Header */
+.navbar{background:transparent;padding:1rem 0}
+.navbar-brand{font-weight:700;color:var(--text)}
+
+/* Controls */
+.input-group-text{background:transparent;border:1px solid rgba(0,0,0,0.06);color:var(--muted)}
+.form-control{background:var(--panel);border:1px solid rgba(0,0,0,0.06);color:var(--text)}
+.form-select{background:var(--panel);border:1px solid rgba(0,0,0,0.06);color:var(--text)}
+.small-muted{color:var(--muted)}
+
+/* Compare panel layout */
+.compare-panel{display:grid;grid-template-columns:1fr 220px 1fr;gap:1rem;align-items:start}
+@media(max-width:900px){ .compare-panel{grid-template-columns:1fr; } .compare-center{order:3} }
+
+/* Selector card */
+.selector-card{
+  background:var(--panel);
+  border-radius:var(--card-radius);
+  padding:1rem;
+  box-shadow: 0 6px 18px rgba(2,6,23,0.06);
+  border:1px solid rgba(0,0,0,0.04);
+}
+
+/* Center column */
+.compare-center{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  pointer-events:auto; /* ensure center doesn't block selects */
+}
+.compare-center-inner{display:flex;flex-direction:column;align-items:center;gap:.5rem}
+
+/* Buttons */
+.btn{border-radius:10px;padding:.55rem .9rem;font-weight:600}
+.btn-cta{
+  background:var(--cta-gradient);
+  color:#fff;border:0;
+  box-shadow: 0 8px 20px rgba(13,110,253,0.12);
+  transition:transform .12s ease, box-shadow .12s ease;
+}
+.btn-cta:hover{transform:translateY(-3px)}
+.btn-outline-cta{background:transparent;border:1px solid rgba(0,0,0,0.06);color:var(--text)}
+
+/* Listbox styling */
+.listbox{height:320px;overflow:auto;padding:.25rem;color:var(--text);background:var(--panel)}
+.listbox option{padding:.35rem;color:var(--text);background:var(--panel)}
+
+/* Comparison card */
+.compare-card{
+  background:var(--panel);
+  border-radius:12px;padding:1rem;border:1px solid rgba(0,0,0,0.04);
+  box-shadow:0 10px 30px rgba(2,6,23,0.06);
+}
+
+/* Wizard */
+.form-wizard{background:var(--panel);border-radius:12px;padding:1rem;border:1px solid rgba(0,0,0,0.04);box-shadow:0 8px 24px rgba(2,6,23,0.06)}
+.form-step{opacity:0;transform:translateX(12px);transition:opacity .36s ease, transform .36s ease}
+.form-step.active{opacity:1;transform:translateX(0)}
+.wizard-step.hidden{display:none}
+.wizard-step.visible{display:block}
+
+/* Utilities */
+.container{max-width:1100px;padding:0 1rem}
+.table-light{background:transparent}
+
+/* Dark-mode specific fixes for form controls and options readability */
+:root[data-theme="dark"] .form-control,
+:root[data-theme="dark"] .form-select,
+:root[data-theme="dark"] .listbox,
+:root[data-theme="dark"] .listbox option {
+  background: rgba(255,255,255,0.02);
+  color: var(--text);
+  border-color: rgba(255,255,255,0.04);
+}
+/* Base state: Hidden and shifted right */
+.wizard-step {
+  opacity: 0;
+  transform: translateX(20px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+  display: none; 
+}
+
+/* Visibility state: Added to DOM but still transparent */
+.wizard-step.visible {
+  display: block; 
+}
+
+/* Active state: Triggers the slide and fade in */
+.wizard-step.active {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Hard hide */
+.wizard-step.hidden {
+  display: none;
+}
+/* --- Run animation & spinner --- */
+.run-spinner {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 4px solid rgba(0,0,0,0.08);
+  border-top-color: var(--accent, #0d6efd);
+  animation: spin 1s linear infinite;
+  display:inline-block;
+  vertical-align:middle;
+  margin-right:.5rem;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Result card entrance */
+.compare-card {
+  opacity: 0;
+  transform: translateY(8px) scale(.995);
+  transition: opacity .36s ease, transform .36s ease;
+}
+.compare-card.visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* Running state highlight */
+.compare-card.running {
+  box-shadow: 0 18px 48px rgba(13,110,253,0.08);
+  border-color: rgba(13,110,253,0.12);
+}
+
+/* Small progress bar */
+.run-progress {
+  height: 6px;
+  background: linear-gradient(90deg, rgba(13,110,253,0.18), rgba(6,182,212,0.18));
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+}
+.run-progress > i {
+  display:block;
+  height:100%;
+  width:0%;
+  background: linear-gradient(90deg, var(--accent, #0d6efd), #06b6d4);
+  transition: width .6s linear;
+}
